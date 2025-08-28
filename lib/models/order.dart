@@ -7,6 +7,7 @@ class Order {
   final DateTime orderDate;
   final String status;
   final String address;
+  final String? paymentMethodId; 
   
   Order({
     required this.id,
@@ -15,6 +16,7 @@ class Order {
     required this.orderDate,
     this.status = 'Доставлен',
     required this.address,
+    this.paymentMethodId, 
   });
   
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,7 @@ class Order {
         : DateTime.now(),
       status: json['status'] ?? 'Доставлен',
       address: json['address'] ?? '',
+      paymentMethodId: json['paymentMethodId'], 
     );
   }
   
@@ -38,6 +41,7 @@ class Order {
       'orderDate': orderDate.toIso8601String(),
       'status': status,
       'address': address,
+      'paymentMethodId': paymentMethodId, 
     };
   }
 }
@@ -86,6 +90,7 @@ List<Order> demoOrders = [
     orderDate: DateTime.now().subtract(const Duration(days: 5)),
     status: 'Доставлен',
     address: 'г. Москва, ул. Тверская, д. 10, кв. 45',
+    paymentMethodId: 'pm1', 
   ),
   Order(
     id: 'ORD-002',
@@ -105,6 +110,7 @@ List<Order> demoOrders = [
     orderDate: DateTime.now().subtract(const Duration(days: 15)),
     status: 'Доставлен',
     address: 'г. Москва, ул. Арбат, д. 20, кв. 15',
+    paymentMethodId: 'pm1', 
   ),
   Order(
     id: 'ORD-003',
@@ -119,5 +125,6 @@ List<Order> demoOrders = [
     orderDate: DateTime.now().subtract(const Duration(days: 30)),
     status: 'Доставлен',
     address: 'г. Москва, Ленинский пр-т, д. 80, кв. 120',
+    paymentMethodId: 'pm2', 
   ),
 ];

@@ -225,10 +225,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               'Нет способов оплаты',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
+                                color: Colors.deepOrange,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text('Добавьте карту для быстрой оплаты.'),
+                            const Text(
+                              'Для оформления заказа необходимо добавить способ оплаты.',
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
                             const SizedBox(height: 12),
                             ElevatedButton.icon(
                               onPressed: () {
@@ -315,49 +319,66 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        final authModel = Provider.of<AuthModel>(context, listen: false);
-                        final user = authModel.currentUser;
-                        
-                        if (user != null) {
-                          final address = "г. Москва, ул. ${_streetController.text}, д. ${_houseController.text}${_apartmentController.text.isNotEmpty ? ", кв. ${_apartmentController.text}" : ""}";
+                    onPressed: (user?.paymentMethods.isEmpty ?? true) || _selectedPayment == null
+                      ? null 
+                      : () {
+                        if (_formKey.currentState!.validate()) {
+                          final authModel = Provider.of<AuthModel>(context, listen: false);
+                          final user = authModel.currentUser;
+                          
+                          if (user != null) {
+                            if (user.paymentMethods.isEmpty || _selectedPayment == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Пожалуйста, добавьте способ оплаты перед оформлением заказа'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
                             
-                          final newOrder = Order(
-                            id: 'ORD-${(user.orders.length + 1).toString().padLeft(3, '0')}',
-                            items: widget.cart.items.map((item) => OrderItem(
-                              product: item.product,
-                              quantity: item.quantity,
-                              size: item.size,
-                            )).toList(),
-                            totalAmount: widget.cart.totalAmount,
-                            orderDate: DateTime.now(),
-                            status: 'В обработке',
-                            address: address,
-                          );
+                            final address = "г. Москва, ул. ${_streetController.text}, д. ${_houseController.text}${_apartmentController.text.isNotEmpty ? ", кв. ${_apartmentController.text}" : ""}";
+                              
+                            final newOrder = Order(
+                              id: 'ORD-${(user.orders.length + 1).toString().padLeft(3, '0')}',
+                              items: widget.cart.items.map((item) => OrderItem(
+                                product: item.product,
+                                quantity: item.quantity,
+                                size: item.size,
+                              )).toList(),
+                              totalAmount: widget.cart.totalAmount,
+                              orderDate: DateTime.now(),
+                              status: 'В обработке',
+                              address: address,
+                              paymentMethodId: _selectedPayment?.id, 
+                            );
+                            
+                            authModel.addOrder(newOrder);
                           
-                          authModel.addOrder(newOrder);
-                        
-                          widget.cart.clear();
-                          
-                          if (widget.onOrderComplete != null) {
-                            widget.onOrderComplete!();
+                            widget.cart.clear();
+                            
+                            if (widget.onOrderComplete != null) {
+                              widget.onOrderComplete!();
+                            }
+                            
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PaymentSuccessScreen(),
+                              ),
+                            );
                           }
-                          
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const PaymentSuccessScreen(),
-                            ),
-                          );
                         }
-                      }
-                    },
+                      },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: AppColors.gradientEnd,
+                      disabledBackgroundColor: Colors.grey[400], 
                     ),
-                    child: const Text('Оплатить'),
+                    child: Text((user?.paymentMethods.isEmpty ?? true) || _selectedPayment == null
+                      ? 'Добавьте способ оплаты'
+                      : 'Оплатить'
+                    ),
                   ),
                 ),
               ],
